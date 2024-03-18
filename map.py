@@ -1,6 +1,7 @@
 import folium
 import webbrowser
 
+
 #with the help of Github Copilot
 class Map:
 
@@ -16,19 +17,16 @@ class Map:
   def update_html(self):
     m = folium.Map(location=[self.x, self.y], zoom_start=self.zoom)
     for entry in self.entrylist:
-      folium.CircleMarker(
-          location=[int(entry["lat"]), int(entry["long"])],
-          radius=entry["radius"],
-          color=None,
-          fill=True,
-          fill_color=entry["type"],
-          fill_opacity=entry["transparency"],
-          popup=folium.Popup(f"{entry['id']}:{entry['title']}"),#ai advice utilized
-      ).add_to(m)
+      folium.CircleMarker(location=[int(entry["lat"]),
+                                    int(entry["long"])],
+                          radius=entry["radius"],
+                          color=None,
+                          fill=True,
+                          fill_color=entry["type"],
+                          fill_opacity=entry["transparency"],
+                          popup=folium.Popup(entry['id'])).add_to(m)
     m.save('map.html')
 
   def run(self):
     import os
     os.system("start chrome map.html")
-
-
