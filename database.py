@@ -8,7 +8,7 @@ class Database:
     cur = con.cursor()
     #create tables which are filled with values that corespond to the lists that will be inputed into functions
     cur.execute(
-        '''CREATE TABLE IF NOT EXISTS incidents (id INTEGER PRIMARY KEY AUTOINCREMENT, profile_id INTEGER, title TEXT, details TEXT, address TEXT, zipcode INTEGER, city TEXT, state TEXT, country TEXT, upvotes INTEGER, type TEXT, date TEXT, time TEXT, datetime TEXT)'''
+        '''CREATE TABLE IF NOT EXISTS incidents (id INTEGER PRIMARY KEY AUTOINCREMENT, profile_id INTEGER, title TEXT, details TEXT, address TEXT, zipcode INTEGER, city TEXT, state TEXT, country TEXT, upvotes INTEGER, type TEXT, date TEXT, time TEXT, datetime TEXT, cleaned_up INTEGER)'''
     )
     cur.execute(
         '''CREATE TABLE IF NOT EXISTS profiles (profile_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, phone_number TEXT, verified INTEGER, posts_upvoted TEXT)''' 
@@ -50,7 +50,7 @@ class Database:
     self.connect()  #create a connection to the database
 
     self.cur.execute(
-        '''INSERT INTO incidents ( profile_id, title, details, address, zipcode, city, state, country, upvotes, type, date, time, datetime) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))''',
+        '''INSERT INTO incidents ( profile_id, title, details, address, zipcode, city, state, country, upvotes, type, date, time, datetime, cleaned_up) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 0)''',
         (entry[0], entry[1], entry[2], entry[3], entry[4], entry[5], entry[6],
          entry[7], entry[8], entry[9], entry[10], entry[11]))
     #use ? to prevent injection attack
@@ -272,3 +272,25 @@ class Database:
       self.con.close()
       print(Exception)
       return False #if the previous line doesn't work then return false because image doesn't exist
+
+  def update_cleaned_up(self, post_id):
+    try:
+      self.connect()
+      self.cur.execute('''SELECT cleaned_up FROM incidents WHERE id = ?''', (post_id,))
+      myVal = self.cur.fetchone()
+      print(myVal[0])
+      #value = self.cur.fetchone()[0] #get the value of the cleaned up column
+
+      if int(myVal[0]) == 0: #if it wasn't already cleaned up then update the value and return true
+        #print('yes')
+        self.cur.execute('''UPDATE incidents SET cleaned_up = 1 WHERE id = ?''', (post_id,))
+        self.con.commit()
+        self.cur.close()
+        self.con.close()
+        return True
+      self.cur.close()
+      self.con.close()
+      return False #if it was already cleaned up then return false
+
+    except:
+      return False #if the post id doesn't exist then return false
