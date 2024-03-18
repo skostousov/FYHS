@@ -212,12 +212,13 @@ class PostsMenu(Menu):
 class DisplayPosts(Menu):  #AI
 
   def __init__(self, queue, classname, database):
+    self.cleaning = False
     self.choices = {
         "1": ("next", self.next),
         "2": ("previous", self.previous),
         "3": ("upvote", self.upvote),
-        "4": ("filter by type", self.filter_by_type
-              )  # Added option to filter by type
+        "4": ("filter by type", self.filter_by_type),  # Added option to filter by type
+        "5": ("clean up vandalism", self.clean_up_vandalism)
     }
     self.database = database
     super().__init__(self.choices, queue, classname)
@@ -226,14 +227,24 @@ class DisplayPosts(Menu):  #AI
         entry[11] + " " + str(entry[12]), "%d/%m/%Y %H"),
                        reverse=True)  #AI
     self.currentpost_index = 0
-    #[[id, profile_id, title, details, address, zipcode, city, state, country, upvotes, type, date, time, datetime],...]
+    #[[id, profile_id, title, details, address, zipcode, city, state, country, upvotes, type, date, time, datetime, cleaned_up],...]
   def refetch(self):
     self.allposts = self.database.fetch_all_entries()
     self.allposts.sort(key=lambda entry: datetime.strptime(
         entry[11] + " " + str(entry[12]), "%d/%m/%Y %H"),
                        reverse=True)  #AI
     self.currentpost_index = 0
-
+  def clean_up_vandalism(self):
+    self.type = "red"
+    self.filtered_data = [
+        entry for entry in self.allposts if entry[10] == self.type and entry[14] == 0
+    ]
+    self.filtered_data.sort(key=lambda entry: datetime.strptime(
+        entry[11] + " " + str(entry[12]), "%d/%m/%Y %H"),
+                            reverse=True)
+    self.allposts = self.filtered_data
+    self.currentpost_index = 0
+    self.cleaning = True
   def filter_by_type(self):
     self.refetch()
     self.type = PostsMenu(self.que, "temp posts menu", None).get_type()
@@ -277,7 +288,13 @@ class DisplayPosts(Menu):  #AI
             self.allposts[self.currentpost_index][9] + 1,
             self.allposts[self.currentpost_index][1]):
           self.allposts[self.currentpost_index][9] += 1
-
+  def mark_cleaned(self):
+    if self.database.update_cleaned_status(self.allposts[self.currentpost_index][0], 1):
+      self.allposts[self.currentpost_index][14] = 1
+      print("Entry marked as cleaned. Thank you!")
+      self.cleaning = False
+    else:
+      print("Already cleaned up.")
   def run(self):
     while True:
       self.display_post(self.currentpost_index)
@@ -288,6 +305,8 @@ class DisplayPosts(Menu):  #AI
         break
       if action:
         action[1]()
+        if self.cleaning:
+          self.choices["5"] = ("mark cleaned", self.mark_cleaned)
       else:
         rich.print(
             f"[yellow2]'{self.choice}' is an invalid option.[/yellow2] [italic]please try again[/]"
