@@ -14,6 +14,10 @@ class Database:
         '''CREATE TABLE IF NOT EXISTS profiles (profile_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, phone_number TEXT, verified INTEGER, posts_upvoted TEXT)''' 
       #the verified has a value either 0 or 1 and it assumes that an account is zero (not verified) unless add_verified_profile function is called
     )
+    cur.execute(
+        '''CREATE TABLE IF NOT EXISTS images (image_link INTEGER PRIMARY KEY, image TEXT)''' 
+      #create imagetable which is filled with values that corespond to the lists that will be inputed into functions
+    )
 
 
 
@@ -240,3 +244,31 @@ class Database:
     self.cur.close()
     self.con.close()
     return True  # Return True to indicate that the operation was successful
+  def add_image(self, post_id, image): #stores the image aray in the database as a string
+    self.connect()
+
+    self.cur.execute(
+    '''INSERT INTO images (image_link, image) VALUES ( ?, ?)''', #add image link (post id) and image to the image table to access later
+    (post_id, str(image)))
+    self.con.commit()
+    self.cur.close()
+    self.con.close()
+
+  def fetch_image(self, post_id): #returns the image array from the database
+    self.connect()
+    try:
+
+      self.cur.execute(
+          '''SELECT image FROM images WHERE image_link = ?''', (post_id,)) #finds foreign key to make sure image is accessable from image table
+      image = eval(self.cur.fetchone()[0]) #sets image to be the value from the image table converted to string
+
+      for i in range(len(image)):
+        image[i] = list(image[i])
+      return image
+      self.cur.close()
+      self.con.close()
+    except:
+      self.cur.close()
+      self.con.close()
+      print(Exception)
+      return False #if the previous line doesn't work then return false because image doesn't exist
