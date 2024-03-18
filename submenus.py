@@ -5,36 +5,32 @@ import os  #
 import copy
 import map
 from database import Database
-import geopy
-from geopy.geocoders import Nominatim
 from datetime import datetime
-from datetime import timedelta
 import requests
-from geopy.geocoders import ArcGIS
 import random
 
 profile_name = None
 
 
-class MainMenu(Menu):
+class MainMenu(Menu):#main menu which provides two options, posts and map
 
   def __init__(self, queue, classname):
     self.choices = {"1": ("Posts", self.posts), "2": ("Map", self.map)}
     super().__init__(self.choices, queue, classname)
     self.database = Database()
 
-  def posts(self):
+  def posts(self):#calls the Post Menu class when posts is selected
     self.postsmenu = PostsMenu(self.que, "Posts Menu", self.database)
     self.postsmenu.run()
 
-  def process_for_map(self):
+  def process_for_map(self):#this processes sql data into a list of dictionaries for display on the map
     self.entry_data = self.database.fetch_all_entries()
     addresses = [
         f"{entry[4]}, {entry[6]}, {entry[7]}, {entry[8]}, {entry[5]}"
         for entry in self.entry_data
     ]
     lat_lngs = self.convert_addresses_to_coords(
-        addresses, "AIzaSyCmkfd90413qg-nCV3wKeHBHw7QPP7d8uM")
+        addresses, "AIzaSyCmkfd90413qg-nCV3wKeHBHw7QPP7d8uM")#arg includes the address and api key for google api to fetch coordinates
     self.redacted_points = []
     for entry, (lat, lng) in zip(self.entry_data, lat_lngs):
       self.extrainfoentrydict = {}
@@ -42,8 +38,8 @@ class MainMenu(Menu):
       self.extrainfoentrydict["time"] = entry[12]
       self.entrydict = {}
       self.entrydict["transparency"] = self.convert_to_transparency(
-          entry[11], entry[12])
-      self.entrydict["radius"] = self.convert_to_radius(entry[9])
+          entry[11], entry[12])#age of post is converted to transparency
+      self.entrydict["radius"] = self.convert_to_radius(entry[9])#amount of upvotes/severity is converted to radius
       self.entrydict["type"] = entry[10]
       self.entrydict["lat"], self.entrydict["long"] = lat, lng
       self.entrydict["id"] = entry[0]
@@ -68,7 +64,7 @@ class MainMenu(Menu):
         lat_lngs.append((None, None))
     return lat_lngs
 
-  def convert_to_radius(self, upvotes):  #AI
+  def convert_to_radius(self, upvotes):  #generated with the help of AI
     base_radius = 6
     max_radius = 15
     expected_upvotes_for_max_radius = 100
@@ -81,7 +77,7 @@ class MainMenu(Menu):
       return int(base_radius + (upvotes / expected_upvotes_for_max_radius) *
                  (max_radius - base_radius))
 
-  def convert_to_transparency(self, date, time):  #AI
+  def convert_to_transparency(self, date, time):  #generated with the help of AI
     # Convert date and time to a single datetime object
     self.datetime_object = datetime.strptime(date + " " + time, "%d/%m/%Y %H")
     # Calculate the time difference between now and the datetime object
@@ -97,11 +93,11 @@ class MainMenu(Menu):
       self.dataformap.append(i[0])
     self.mapobject = map.Map(self.dataformap, x, y, zm)
     self.mapobject.update_html()
-    self.mapobject.run()
+    self.mapobject.run()#runs the map
     mapmenu = MapMenu(self.que, "Map Menu", self.data)
-    mapmenu.run()
+    mapmenu.run()#opens map menu to filter various values (like type, earliest data) 
 
-  def get_details(self):
+  def get_details(self):#sets the start x and y vaues and zoom value for map
     start_x = 0
     start_y = 0
     zoom = 2
@@ -120,7 +116,7 @@ class MapMenu(Menu):
     super().__init__(self.choices, queue, classname)
 
   def filter_by_type(self):
-    self.type = PostsMenu(self.que, "temp posts menu", None).get_type()
+    self.type = PostsMenu(self.que, "temp posts menu", None).get_type()#borrows post menu function to get user input for type (stored as color value)
     self.filtered_data = [
         entry[0] for entry in self.data if entry[0]["type"] == self.type
     ]
@@ -133,11 +129,11 @@ class MapMenu(Menu):
     self.filtered_data = [
         entry[0] for entry in self.data
         if datetime.strptime(entry[1]["date"], "%d/%m/%Y") > datetime.strptime(
-            input_date, "%d/%m/%Y")
+            input_date, "%d/%m/%Y")#converts date to value that can be compared to other date values
     ]
     self.mapobject = map.Map(self.filtered_data, 0, 0, 2)
     self.mapobject.update_html()
-    self.mapobject.run()
+    self.mapobject.run()#opens the map again
 
   def display_all(self):
     self.filtered_data = [entry[0] for entry in self.data]
@@ -146,7 +142,7 @@ class MapMenu(Menu):
     self.mapobject.run()
 
 
-class PostsMenu(Menu):
+class PostsMenu(Menu):#menu for posting or viewing posts
 
   def __init__(self, queue, classname, database):
     self.choices = {
@@ -159,18 +155,18 @@ class PostsMenu(Menu):
   def display_posts(self):
 
     self.display_posts = DisplayPosts(self.que, "Posts", self.database)
-    self.display_posts.run()
+    self.display_posts.run()# runs the Display posts menu to view posts
 
   def add_post(self):
     self.login = Login(self.que, "Authentication", self.database)
     if profile_name:
       self.post = self.postentry()
-      if not self.post:
+      if not self.post:#False is returned if user banned for posting too much
         print(
             "Sorry, user banned for the day"
         )  #this runs a function in database.py that detects trolls and if it detects a troll it prints this
       else:
-        self.addfunctoq(self.database.add_entry(self.post))
+        self.database.add_entry(self.post)
     elif self.login.run():
       self.post = self.postentry()
       if not self.post:
@@ -213,10 +209,10 @@ class PostsMenu(Menu):
     self.zipcode = input("Enter zipcode: ")
     self.type = self.get_type()
     self.time = input("Enter time: ")
-    if not self.database.check_user(
-        self.post_author, f"{self.day}/{self.month}/{self.year}",
+    if not self.database.check_user(#check if user is a troll, this function is explained in database.py
+        self.post_author, f"{self.day}/{self.month}/{self.year}",#put in arguements for function
         self.database.fetch_id_by_username(self.post_author)):
-      return False
+      return False #make sure that troll doesn't go through, if it returns false the user sees a message that they are locked out
     return [
         self.profile_id, self.title, self.details, self.address, self.zipcode,
         self.city, self.state, self.country, 0, self.type,
@@ -224,7 +220,7 @@ class PostsMenu(Menu):
     ]
 
 
-class DisplayPosts(Menu):  #AI
+class DisplayPosts(Menu):  #used AI for autocomplete and generating small peices of code
 
   def __init__(self, queue, classname, database):
     self.cleaning = False
@@ -252,7 +248,7 @@ class DisplayPosts(Menu):  #AI
                        reverse=True)  #AI
     self.currentpost_index = 0
 
-  def clean_up_vandalism(self):
+  def clean_up_vandalism(self):#allows user to volunteer cleanup
     self.refetch()
     self.type = "red"
     self.filtered_data = [

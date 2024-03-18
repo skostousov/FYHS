@@ -11,7 +11,7 @@ def worker():
       pass
     else:
       item = q.get()
-      item()
+      item[0](item[1])
       q.task_done()
 
 
