@@ -10,6 +10,7 @@ folium = "^0.16.0"
 geopy = "^2.4.1"
 requests = "^2.31.0"
 rich = "^13.7.1"
+faker = "^24.2.0"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md

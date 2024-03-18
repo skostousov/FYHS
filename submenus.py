@@ -183,9 +183,17 @@ class PostsMenu(Menu):
   def add_post(self):
     self.login = Login(self.que, "Authentication", self.database)
     if profile_name:
-      self.database.add_entry(self.postentry())
+      self.post = self.postentry()
+      if not self.post:
+        print("Sorry, user banned for the day")
+      else:
+        self.database.add_entry(self.post)
     elif self.login.run():
-      self.database.add_entry(self.postentry())
+      self.post = self.postentry()
+      if not self.post:
+        print("Sorry, user banned for the day")
+      else:
+        self.database.add_entry(self.post)
 
   def get_type(self):
     while True:
@@ -211,7 +219,7 @@ class PostsMenu(Menu):
     self.profile_id = self.database.fetch_id_by_username(self.post_author)
     #self.date = DateMenu(self.que, "Date Menu").run()
     self.title = input("Enter title: ")
-    self.day, self.month, self.year = input("Enter Day: "), input(
+    self.day, self.month, self.year = input("Enter Day of month: "), input(
         "Enter Month: "), input("Enter Year: ")
     self.details = input("Enter incident details: ")
     self.address = input("Enter address: ")
@@ -221,6 +229,10 @@ class PostsMenu(Menu):
     self.zipcode = input("Enter zipcode: ")
     self.type = self.get_type()
     self.time = input("Enter time: ")
+    if not self.database.check_user(
+        self.post_author, f"{self.day}/{self.month}/{self.year}",
+        self.database.fetch_id_by_username(self.post_author)):
+      return False
     return [
         self.profile_id, self.title, self.details, self.address, self.zipcode,
         self.city, self.state, self.country, 0, self.type,
@@ -236,8 +248,10 @@ class DisplayPosts(Menu):  #AI
         "1": ("next", self.next),
         "2": ("previous", self.previous),
         "3": ("upvote", self.upvote),
-        "4": ("filter by type", self.filter_by_type),  # Added option to filter by type
-        "5": ("clean up vandalism", self.clean_up_vandalism)
+        "4": ("filter by type",
+              self.filter_by_type),  # Added option to filter by type
+        "5": ("clean up vandalism", self.clean_up_vandalism),
+        "6": ("display all", self.refetch)
     }
     self.database = database
     super().__init__(self.choices, queue, classname)
@@ -253,10 +267,13 @@ class DisplayPosts(Menu):  #AI
         entry[11] + " " + str(entry[12]), "%d/%m/%Y %H"),
                        reverse=True)  #AI
     self.currentpost_index = 0
+
   def clean_up_vandalism(self):
+    self.refetch()
     self.type = "red"
     self.filtered_data = [
-        entry for entry in self.allposts if entry[10] == self.type and entry[14] == 0
+        entry for entry in self.allposts
+        if entry[10] == self.type and entry[14] == 0
     ]
     self.filtered_data.sort(key=lambda entry: datetime.strptime(
         entry[11] + " " + str(entry[12]), "%d/%m/%Y %H"),
@@ -264,6 +281,7 @@ class DisplayPosts(Menu):  #AI
     self.allposts = self.filtered_data
     self.currentpost_index = 0
     self.cleaning = True
+
   def filter_by_type(self):
     self.refetch()
     self.type = PostsMenu(self.que, "temp posts menu", None).get_type()
@@ -307,13 +325,16 @@ class DisplayPosts(Menu):  #AI
             self.allposts[self.currentpost_index][9] + 1,
             self.allposts[self.currentpost_index][1]):
           self.allposts[self.currentpost_index][9] += 1
+
   def mark_cleaned(self):
-    if self.database.update_cleaned_up(self.allposts[self.currentpost_index][0]):
+    if self.database.update_cleaned_up(
+        self.allposts[self.currentpost_index][0]):
       self.allposts[self.currentpost_index][14] = 1
       print("Entry marked as cleaned. Thank you!")
       self.cleaning = False
     else:
       print("Already cleaned up.")
+
   def run(self):
     while True:
       self.display_post(self.currentpost_index)
@@ -326,6 +347,8 @@ class DisplayPosts(Menu):  #AI
         action[1]()
         if self.cleaning:
           self.choices["5"] = ("mark cleaned", self.mark_cleaned)
+        else:
+          self.choices["5"] = ("clean up vandalism", self.clean_up_vandalism)
       else:
         rich.print(
             f"[yellow2]'{self.choice}' is an invalid option.[/yellow2] [italic]please try again[/]"
