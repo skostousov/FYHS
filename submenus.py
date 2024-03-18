@@ -12,7 +12,6 @@ from datetime import timedelta
 import requests
 from geopy.geocoders import ArcGIS
 import random
-from faker import Faker
 
 profile_name = None
 
@@ -23,23 +22,6 @@ class MainMenu(Menu):
     self.choices = {"1": ("Posts", self.posts), "2": ("Map", self.map)}
     super().__init__(self.choices, queue, classname)
     self.database = Database()
-    # fake = Faker()
-
-    # for _ in range(10):
-    #   title = fake.sentence()
-    #   details = fake.paragraph()
-    #   address = fake.address()
-    #   zipcode = fake.zipcode()
-    #   city = fake.city()
-    #   state = fake.state()
-    #   country = fake.country()
-    #   type = random.choice(["blue", "red", "green"])
-    #   date = fake.date()
-    #   time = fake.time()
-    #   date_str = datetime.strptime(date, "%Y-%m-%d").strftime("%d/%m/%Y")
-    #   time_str = datetime.strptime(time, "%H:%M:%S").strftime("%H")
-
-    #   self.database.add_entry([2, title, details, address, zipcode, city, state, country, 0, type, date, time])
 
   def posts(self):
     self.postsmenu = PostsMenu(self.que, "Posts Menu", self.database)
@@ -61,7 +43,6 @@ class MainMenu(Menu):
       self.entrydict = {}
       self.entrydict["transparency"] = self.convert_to_transparency(
           entry[11], entry[12])
-      print(entry)
       self.entrydict["radius"] = self.convert_to_radius(entry[9])
       self.entrydict["type"] = entry[10]
       self.entrydict["lat"], self.entrydict["long"] = lat, lng
@@ -176,7 +157,7 @@ class PostsMenu(Menu):
     self.database = database
 
   def display_posts(self):
-    #####TO BE EDITED#####
+
     self.display_posts = DisplayPosts(self.que, "Posts", self.database)
     self.display_posts.run()
 
@@ -185,9 +166,11 @@ class PostsMenu(Menu):
     if profile_name:
       self.post = self.postentry()
       if not self.post:
-        print("Sorry, user banned for the day")
+        print(
+            "Sorry, user banned for the day"
+        )  #this runs a function in database.py that detects trolls and if it detects a troll it prints this
       else:
-        self.database.add_entry(self.post)
+        self.addfunctoq(self.database.add_entry(self.post))
     elif self.login.run():
       self.post = self.postentry()
       if not self.post:
@@ -215,12 +198,13 @@ class PostsMenu(Menu):
   def postentry(self):
     #[[profile_id, title, details, address, zipcode, city, state, country, upvotes, type, date, time, datetime]]
     #####TO BE EDITED#####
+    #get values from input values and put them into list that will be entered into add_entry function in database.py
     self.post_author = profile_name
     self.profile_id = self.database.fetch_id_by_username(self.post_author)
     #self.date = DateMenu(self.que, "Date Menu").run()
     self.title = input("Enter title: ")
     self.day, self.month, self.year = input("Enter Day of month: "), input(
-        "Enter Month: "), input("Enter Year: ")
+        "Enter Month as 2 digit number: "), input("Enter Year (4 digits): ")
     self.details = input("Enter incident details: ")
     self.address = input("Enter address: ")
     self.country = input("Enter country: ")
