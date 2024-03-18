@@ -215,7 +215,8 @@ class DisplayPosts(Menu):  #AI
     self.choices = {
         "1": ("next", self.next),
         "2": ("previous", self.previous),
-        "3": ("upvote", self.upvote)
+        "3": ("upvote", self.upvote),
+        "4": ("filter by type", self.filter_by_type)  # Added option to filter by type
     }
     self.database = database
     super().__init__(self.choices, queue, classname)
@@ -225,6 +226,24 @@ class DisplayPosts(Menu):  #AI
                        reverse=True)  #AI
     self.currentpost_index = 0
     #[[id, profile_id, title, details, address, zipcode, city, state, country, upvotes, type, date, time, datetime],...]
+  def refetch(self):
+    self.allposts = self.database.fetch_all_entries()
+    self.allposts.sort(key=lambda entry: datetime.strptime(
+        entry[11] + " " + str(entry[12]), "%d/%m/%Y %H"),
+                       reverse=True)  #AI
+    self.currentpost_index = 0
+  def filter_by_type(self):
+    self.refetch()
+    self.type = PostsMenu(self.que, "temp posts menu", None).get_type()
+    self.filtered_data = [
+        entry for entry in self.allposts if entry[10] == self.type
+    ]
+    self.filtered_data.sort(key=lambda entry: datetime.strptime(
+        entry[11] + " " + str(entry[12]), "%d/%m/%Y %H"),
+                            reverse=True)
+    self.allposts = self.filtered_data
+    self.currentpost_index = 0
+
   def previous(self):
     if self.currentpost_index < len(self.allposts) - 1:
       self.currentpost_index += 1
@@ -280,10 +299,13 @@ class DisplayPosts(Menu):  #AI
     rich.print("[italic]please enter an option:[/]")
 
   def display_post(self, index):
-    self.indexedpost = self.allposts[index]
-    print(
-        f" Post id: {self.indexedpost[0]}\n Date: {self.indexedpost[11]} \n Heading: {self.indexedpost[2]} \n Details: {self.indexedpost[3]} \n Address: {self.indexedpost[4]}, {self.indexedpost[6]}, {self.indexedpost[7]}, {self.indexedpost[8]}, {self.indexedpost[5]} \n Upvotes: {self.indexedpost[9]} \n Type: {self.indexedpost[10]} \n Time: {self.indexedpost[12]} \n"
-    )
+    try:  
+      self.indexedpost = self.allposts[index]
+      print(
+          f" Post id: {self.indexedpost[0]}\n Date: {self.indexedpost[11]} \n Heading: {self.indexedpost[2]} \n Details: {self.indexedpost[3]} \n Address: {self.indexedpost[4]}, {self.indexedpost[6]}, {self.indexedpost[7]}, {self.indexedpost[8]}, {self.indexedpost[5]} \n Upvotes: {self.indexedpost[9]} \n Type: {self.indexedpost[10]} \n Time: {self.indexedpost[12]} \n"
+      )
+    except:
+      print("No posts to display")
 
 
 class Login(Menu):
