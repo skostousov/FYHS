@@ -216,7 +216,8 @@ class DisplayPosts(Menu):  #AI
         "1": ("next", self.next),
         "2": ("previous", self.previous),
         "3": ("upvote", self.upvote),
-        "4": ("filter by type", self.filter_by_type)  # Added option to filter by type
+        "4": ("filter by type", self.filter_by_type
+              )  # Added option to filter by type
     }
     self.database = database
     super().__init__(self.choices, queue, classname)
@@ -232,6 +233,7 @@ class DisplayPosts(Menu):  #AI
         entry[11] + " " + str(entry[12]), "%d/%m/%Y %H"),
                        reverse=True)  #AI
     self.currentpost_index = 0
+
   def filter_by_type(self):
     self.refetch()
     self.type = PostsMenu(self.que, "temp posts menu", None).get_type()
@@ -258,23 +260,23 @@ class DisplayPosts(Menu):  #AI
 
   def upvote(self):
     if profile_name:
-        if self.database.fetch_id_by_username(profile_name) != self.allposts[
-                self.currentpost_index][1]:
-            if self.database.update_upvotes(
-                    self.allposts[self.currentpost_index][0],
-                    self.allposts[self.currentpost_index][9] + 1,
-                    self.allposts[self.currentpost_index][1]):
-                self.allposts[self.currentpost_index][9] += 1
+      if self.database.fetch_id_by_username(profile_name) != self.allposts[
+          self.currentpost_index][1]:
+        if self.database.update_upvotes(
+            self.allposts[self.currentpost_index][0],
+            self.allposts[self.currentpost_index][9] + 1,
+            self.allposts[self.currentpost_index][1]):
+          self.allposts[self.currentpost_index][9] += 1
     else:
-        self.login = Login(self.que, "Authentication", self.database)
-        self.login.run()
-        if str(self.database.fetch_id_by_username(profile_name)) != str(self.allposts[
-                self.currentpost_index][1]):
-            if self.database.update_upvotes(
-                    self.allposts[self.currentpost_index][0],
-                    self.allposts[self.currentpost_index][9] + 1,
-                    self.allposts[self.currentpost_index][1]):
-                self.allposts[self.currentpost_index][9] += 1
+      self.login = Login(self.que, "Authentication", self.database)
+      self.login.run()
+      if str(self.database.fetch_id_by_username(profile_name)) != str(
+          self.allposts[self.currentpost_index][1]):
+        if self.database.update_upvotes(
+            self.allposts[self.currentpost_index][0],
+            self.allposts[self.currentpost_index][9] + 1,
+            self.allposts[self.currentpost_index][1]):
+          self.allposts[self.currentpost_index][9] += 1
 
   def run(self):
     while True:
@@ -299,7 +301,7 @@ class DisplayPosts(Menu):  #AI
     rich.print("[italic]please enter an option:[/]")
 
   def display_post(self, index):
-    try:  
+    try:
       self.indexedpost = self.allposts[index]
       print(
           f" Post id: {self.indexedpost[0]}\n Date: {self.indexedpost[11]} \n Heading: {self.indexedpost[2]} \n Details: {self.indexedpost[3]} \n Address: {self.indexedpost[4]}, {self.indexedpost[6]}, {self.indexedpost[7]}, {self.indexedpost[8]}, {self.indexedpost[5]} \n Upvotes: {self.indexedpost[9]} \n Type: {self.indexedpost[10]} \n Time: {self.indexedpost[12]} \n"
@@ -310,76 +312,76 @@ class DisplayPosts(Menu):  #AI
 
 class Login(Menu):
 
-    def __init__(self, queue, classname, database):
-        self.choices = {
-                "1": ("login", self.login),
-                "2": ("register", self.register)
-        }
-        super().__init__(self.choices, queue, classname)
-        self.database = database
+  def __init__(self, queue, classname, database):
+    self.choices = {
+        "1": ("login", self.login),
+        "2": ("register", self.register)
+    }
+    super().__init__(self.choices, queue, classname)
+    self.database = database
 
-    def run(self):
-        while True:
-            if profile_name:  # Comment: Check if profile_name is already set
-                break
-            self.display_menu()
-            self.choice = input()
-            print(end="\033c")  # Comment: Clear the interpreter console
-            action = self.choices.get(self.choice)
-            if self.choice == self.exit:
-                break
-            if action:
-                if (action[1]()):
-                    return True
-            else:
-                rich.print(
-                        f"[yellow2]'{self.choice}' is an invalid option.[/yellow2] [italic]please try again[/]"
-                )
+  def run(self):
+    while True:
+      if profile_name:  # Comment: Check if profile_name is already set
+        break
+      self.display_menu()
+      self.choice = input()
+      print(end="\033c")  # Comment: Clear the interpreter console
+      action = self.choices.get(self.choice)
+      if self.choice == self.exit:
+        break
+      if action:
+        if (action[1]()):
+          return True
+      else:
+        rich.print(
+            f"[yellow2]'{self.choice}' is an invalid option.[/yellow2] [italic]please try again[/]"
+        )
 
-    def user_authentication(self):  #AI assisted
-        while True:
-            self.user = input("Enter your username: ")
-            self.password = input("Enter your password: ")
-            if not self.database.fetch_id_by_username(self.user):
-                print("no such username")
-                return False
-            elif self.database.authenticate(self.user, self.password):
-                print("Authentication successful!")
-                global profile_name  # Comment: Add global keyword to update global variable
-                profile_name = copy.deepcopy(self.user)
-                break
-            else:
-                print("Invalid username or password. Please try again.")
-        return True
+  def user_authentication(self):  #AI assisted
+    while True:
+      self.user = input("Enter your username: ")
+      self.password = input("Enter your password: ")
+      if not self.database.fetch_id_by_username(self.user):
+        print("no such username")
+        return False
+      elif self.database.authenticate(self.user, self.password):
+        print("Authentication successful!")
+        global profile_name  # Comment: Add global keyword to update global variable
+        profile_name = copy.deepcopy(self.user)
+        break
+      else:
+        print("Invalid username or password. Please try again.")
+    return True
 
-    def login(self):
-        if self.user_authentication():
-            return True
-        else:
-            return False
+  def login(self):
+    if self.user_authentication():
+      return True
+    else:
+      return False
 
-    def register(self):  #AI
-        while True:
-            self.user = input("Enter your username: ")
-            self.phonenumber = input("Enter your phone number: ")
-            self.password = input("Enter your password: ")
-            self.password_repeat = input("Repeat your password: ")
+  def register(self):  #AI
+    while True:
+      self.user = input("Enter your username: ")
+      self.phonenumber = input("Enter your phone number: ")
+      self.password = input("Enter your password: ")
+      self.password_repeat = input("Repeat your password: ")
 
-            if self.password != self.password_repeat:
-                print("Passwords do not match. Please try again.")
-                continue
+      if self.password != self.password_repeat:
+        print("Passwords do not match. Please try again.")
+        continue
 
-            if not self.is_good_password(self.password):
-                print("Password is not strong enough. Please try again.")
-                continue
-            else:
-                self.database.add_profile(self.user, self.password, self.phonenumber)
-                print("User added successfully!")
-                break
+      if not self.is_good_password(self.password):
+        print("Password is not strong enough. Please try again.")
+        continue
+      else:
+        self.database.add_profile(self.user, self.password, self.phonenumber)
+        print("User added successfully!")
+        break
 
-    def is_good_password(self, password):
-        # Implement your password strength criteria here
-        # For example, you can check for minimum length, presence of uppercase, lowercase, digits, etc.
-        # Return True if the password meets the criteria, False otherwise
-        return len(password) >= 8 and any(c.isupper() for c in password) and any(
-                c.islower() for c in password) and any(c.isdigit() for c in password)
+  def is_good_password(self, password):
+    # Implement your password strength criteria here
+    # For example, you can check for minimum length, presence of uppercase, lowercase, digits, etc.
+    # Return True if the password meets the criteria, False otherwise
+    return len(password) >= 8 and any(c.isupper() for c in password) and any(
+        c.islower() for c in password) and any(c.isdigit() for c in password)
