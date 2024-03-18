@@ -11,6 +11,8 @@ from datetime import datetime
 from datetime import timedelta
 import requests
 from geopy.geocoders import ArcGIS
+import random
+from faker import Faker
 
 profile_name = None
 
@@ -21,6 +23,23 @@ class MainMenu(Menu):
     self.choices = {"1": ("Posts", self.posts), "2": ("Map", self.map)}
     super().__init__(self.choices, queue, classname)
     self.database = Database()
+    # fake = Faker()
+
+    # for _ in range(10):
+    #   title = fake.sentence()
+    #   details = fake.paragraph()
+    #   address = fake.address()
+    #   zipcode = fake.zipcode()
+    #   city = fake.city()
+    #   state = fake.state()
+    #   country = fake.country()
+    #   type = random.choice(["blue", "red", "green"])
+    #   date = fake.date()
+    #   time = fake.time()
+    #   date_str = datetime.strptime(date, "%Y-%m-%d").strftime("%d/%m/%Y")
+    #   time_str = datetime.strptime(time, "%H:%M:%S").strftime("%H")
+
+    #   self.database.add_entry([2, title, details, address, zipcode, city, state, country, 0, type, date, time])
 
   def posts(self):
     self.postsmenu = PostsMenu(self.que, "Posts Menu", self.database)
@@ -289,7 +308,7 @@ class DisplayPosts(Menu):  #AI
             self.allposts[self.currentpost_index][1]):
           self.allposts[self.currentpost_index][9] += 1
   def mark_cleaned(self):
-    if self.database.update_cleaned_status(self.allposts[self.currentpost_index][0], 1):
+    if self.database.update_cleaned_up(self.allposts[self.currentpost_index][0]):
       self.allposts[self.currentpost_index][14] = 1
       print("Entry marked as cleaned. Thank you!")
       self.cleaning = False
