@@ -28,15 +28,7 @@ class Map:
     m.save('map.html')
 
   def run(self):
-    webbrowser.open('map.html')
+    import os
+    os.system("start chrome map.html")
 
-# mapinstance = Map([
-#   {"latitude": 40.7128, "longitude": -74.0060, "radius": 5, "color": "red", "opacity": 0.6},
-#   {"latitude": 40.7589, "longitude": -73.9851, "radius": 3, "color": "blue", "opacity": 0.8},
-#   {"latitude": 40.6782, "longitude": -73.9442, "radius": 4, "color": "green", "opacity": 0.7},
-#   {"latitude": 40.7291, "longitude": -73.9965, "radius": 5, "color": "yellow", "opacity": 0.5},
-#   {"latitude": 40.7421, "longitude": -74.0049, "radius": 6, "color": "orange", "opacity": 0.4},
-#   {"latitude": 40.7679, "longitude": -73.9822, "radius": 7, "color": "purple", "opacity": 0.3}
-# ])
-# mapinstance.update_html()
-# mapinstance.run()
+
